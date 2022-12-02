@@ -3,20 +3,40 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"index/suffixarray"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"sync"
+	// "github.com/umahmood/soundex"
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	searcher := Searcher{}
-	err := searcher.Load("completeworks.txt")
+	texts, _ := ioutil.ReadDir("./texts")
+	searcher.TextNames = make([]string, 0)
+
+	if _, err := os.Stat("data"); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir("data", os.ModePerm)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
+	// TODO error handling
+	err := processTexts(texts, &searcher, &wg)
 	if err != nil {
 		log.Fatal(err)
 	}
+	wg.Wait()
+
+	searcher.Load()
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
@@ -35,20 +55,20 @@ func main() {
 	}
 }
 
-type Searcher struct {
-	CompleteWorks string
-	SuffixArray   *suffixarray.Index
-}
-
 func handleSearch(searcher Searcher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, ok := r.URL.Query()["q"]
+
 		if !ok || len(query[0]) < 1 {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("missing search query in URL params"))
 			return
 		}
-		results := searcher.Search(query[0])
+
+		fmt.Printf("Got a query: %s\n", query[0])
+
+		qs := strings.ToLower(query[0])
+		results := searcher.Search(qs)
 		buf := &bytes.Buffer{}
 		enc := json.NewEncoder(buf)
 		err := enc.Encode(results)
@@ -57,26 +77,8 @@ func handleSearch(searcher Searcher) func(w http.ResponseWriter, r *http.Request
 			w.Write([]byte("encoding failure"))
 			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(buf.Bytes())
 	}
-}
-
-func (s *Searcher) Load(filename string) error {
-	dat, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("Load: %w", err)
-	}
-	s.CompleteWorks = string(dat)
-	s.SuffixArray = suffixarray.New(dat)
-	return nil
-}
-
-func (s *Searcher) Search(query string) []string {
-	idxs := s.SuffixArray.Lookup([]byte(query), -1)
-	results := []string{}
-	for _, idx := range idxs {
-		results = append(results, s.CompleteWorks[idx-250:idx+250])
-	}
-	return results
 }

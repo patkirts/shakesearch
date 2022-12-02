@@ -6,22 +6,22 @@
   <title>ShakeSearch</title>
   <link rel="stylesheet" href="style.css">
   <meta name="theme-color" content="#fafafa">
+  <meta charset="utf-8">
 </head>
 
 <body>
-    <p>
-        <form id="form">
-            <label for="query">Query</label>
-            <input type="text" id="query" name="query">
-            <button type="submit">Search</button>
-        </form>
-    </p>
-    <p>
-        <table id="table">
-          <tbody id="table-body"></tbody>
-        </table>
-    </p>
-  <script src="app.js"></script>
+  <div id="app">
+    <h1>Welcome to ShakeSearch!</h1>
+    <p>Where you can find Shakespeare's words.</p>
+    <form id="form">
+      <input type="text" id="query" name="query"
+        placeholder="Search Shakespeare's Complete Works"
+      />
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 
 </html>

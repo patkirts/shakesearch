@@ -260,3 +260,18 @@ textarea {
     page-break-after: avoid;
   }
 }
+
+/* My Styles */
+
+body {
+  text-align: center;
+}
+
+li {
+  list-style-type: none;
+  margin-bottom: 20px;
+  padding: 0;
+}
+li footer {
+  font-size: 14px;
+}
