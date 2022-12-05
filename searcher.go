@@ -9,35 +9,29 @@ import (
 type Searcher struct {
 	TextNames    []string
 	TextsMap     map[string][]string
-	LowercaseMap map[string][]string
+	SearchMap map[string][]string
 	// SoundexMap   map[string][]string
 }
 
-type SearchResult struct {
-	Title string
-	Lines []string
-	Rank int
-}
-
-type SearchResults []SearchResult
+type SearchResults []LineResult
 
 func (s *Searcher) Load() {
 	s.TextsMap = make(map[string][]string)
-	s.LowercaseMap = make(map[string][]string)
+	s.SearchMap = make(map[string][]string)
 	// s.SoundexMap = make(map[string][]string)
 
 	for _, filename := range s.TextNames {
-		plain, err := os.ReadFile("./texts/" + filename)
+		plain, err := os.ReadFile("./data/main---" + filename)
 		if err != nil {
 			fmt.Println("Loading file: %w", err)
 		}
 		s.TextsMap[filename] = strings.Split(string(plain), "\n")
 
-		lower, err := os.ReadFile("./data/lowercase---" + filename)
+		search, err := os.ReadFile("./data/search---" + filename)
 		if err != nil {
 			fmt.Println("Loading file: %w", err)
 		}
-		s.LowercaseMap[filename] = strings.Split(string(lower), "\n")
+		s.SearchMap[filename] = strings.Split(string(search), "\n")
 
 		// sound, err := os.ReadFile("./data/soundex---" + filename)
 		// if err != nil {
@@ -47,7 +41,7 @@ func (s *Searcher) Load() {
 	}
 }
 
-func (s *Searcher) Search(query string) SearchResults {
+func (s *Searcher) Search(query [][]rune) SearchResults {
 	// for t of texts
 	// get line #s matching soundex
 	// get line #s matching levenshtein
@@ -56,7 +50,7 @@ func (s *Searcher) Search(query string) SearchResults {
 	// (relevance defined differently for plays, poems, sonnets)
 	results := SearchResults{}
 	for _, filename := range s.TextNames {
-		levRes := levenshteinSearch(query, s.LowercaseMap[filename], filename)
+		levRes := levenshteinSearch(query, s.SearchMap[filename], filename)
 		if len(levRes) > 0 {
 			passages := s.GetSearchResults(filename, levRes)
 			results = append(results, passages...)
@@ -69,22 +63,14 @@ func (s *Searcher) Search(query string) SearchResults {
 	// })
 }
 
-func (s *Searcher) GetSearchResults(filename string, results [][2]int) SearchResults {
+func (s *Searcher) GetSearchResults(filename string, results []LineResult) SearchResults {
 	text := s.TextsMap[filename]
 	passages := SearchResults{}
-	resLen := len(results)
 
-	for i := 0; i < resLen; i++{
-		lines := []string{}
-		r := results[i]
-		lineNum := r[0]
-		rank := r[1]
-		// if lineNum > 0 {
-		// 	// prev := TODO think about this
-		// }
-		lines = append(lines, text[lineNum])
-
-		passages = append(passages, SearchResult{text[0], lines, rank})
+	for _, res := range results {
+		res.Title = text[0]
+		res.Line = text[res.LineNum]
+		passages = append(passages, res)
 	}
 
 	return passages

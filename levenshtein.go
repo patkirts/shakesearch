@@ -1,90 +1,74 @@
 package main
 
 import (
-	"math"
-	"regexp"
+	"fmt"
+	"strings"
 
 	"github.com/texttheater/golang-levenshtein/levenshtein"
 )
 
 var defLevOpts = levenshtein.DefaultOptions
 
+type LineResult struct {
+	LineNum int
+	Score int
+	Act string
+	Scene string
+	Character string
+	Line string
+	Title string
+}
+
 // returns [[line number, levenshtein distance]] for a text
-func levenshteinSearch(query string, lines []string, filename string) [][2]int {
-	qs := []rune(query)
-	qsLen := len(qs)
+func levenshteinSearch(query [][]rune, lines []string, filename string) []LineResult {
 
-	levThreshold := int(math.Round(float64(qsLen) / 8.0)) + 2
+	// levThreshold := int(math.Round(float64(len(query)) / 8.0))
+	levThreshold := (len(query)-1)*2 + len(query)
 
-	// a very crude method for screening
-	whitespace := regexp.MustCompile(`\s`).MatchString(query)
+	result := []LineResult{}
 
-	result := [][2]int{}
-
-	startCounting := 10000
-	if (lines[0] == "lucrece") {
-		startCounting = 9
-	} else if (lines[0] == "the phoenix and turtle") {
-		startCounting = 12
-	} else if (lines[0] == "sonnets") {
-		startCounting = 10
+	title := lines[0]
+	if (title == "lucrece" || title == "the phoenix and turtle" || title == "sonnets") {
+		return result
 	}
 
-	gotCharacters := false
-	gotALineAfter := false
-
 	for lineNum, line := range lines {
-		if lineNum >= startCounting {
-			ln := []rune(line)
-			lnLen := len(ln)
+		words := strings.Split(line, ";")
+		if lineNum > 0 && len(words) > 3 {
 
-			diff := lnLen - qsLen
-			target := qs
-			source := ln
+			score := 0
+			start := 0
+			for _, word := range words[3:] {
+				for _, qs := range query[start:] {
+					ln := []rune(word)
+					target := qs
+					source := ln
 
-			if diff == 0 {
-				distance := levenshtein.DistanceForStrings(target, source, defLevOpts)
-				if (distance < levThreshold) && whitespace {
-					result = append(result, [2]int{ lineNum, distance })
-				}
-
-			} else {
-				if diff < 0 {
-					// the source is the bigger string
-					source = qs
-					target = ln
-				}
-
-				// proceed (skipping? todo) through the source
-				targetLen := len(target)
-				distance := 1000
-				for i := 0; i < diff; i++ {
-					s := source[i:targetLen+i]
-					d := levenshtein.DistanceForStrings(target, s, defLevOpts)
-					if (!whitespace && i<3 && d<2) {
-						i = targetLen
-					} else {
-						if d < distance {
-							distance = d
+					distance := levenshtein.DistanceForStrings(target, source, defLevOpts)
+					if (distance < 1) {
+						score = score+2
+						start++
+						if score > 1 {
+							score++
 						}
+					} else if (distance < 2) {
+						score++
+						start++
 					}
 				}
-
-				if (distance < levThreshold) {
-					result = append(result, [2]int{ lineNum, distance })
-				}
 			}
 
-		} else {
-			if line == "characters in the play" {
-				gotCharacters = true
+			if (score > levThreshold) {
+				fmt.Println(score, line)
+				result = append(result, LineResult{
+					LineNum: lineNum,
+					Score: score,
+					Act: words[0],
+					Scene: words[1],
+					Character: words[2],
+				})
 			}
-			if gotCharacters && (line == "\r" || line == "\n" || line == "") {
-				gotALineAfter = true
-			}
-			if gotCharacters && gotALineAfter {
-				startCounting = lineNum
-			}
+
 		}
 	}
 

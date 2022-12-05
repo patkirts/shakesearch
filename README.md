@@ -5,7 +5,7 @@ you'll find a simple web app that allows a user to search for a text string in
 the complete works of Shakespeare.
 
 You can see a live version of the app at
-https://pulley-shakesearch.onrender.com/. Try searching for "Hamlet" to display
+https://patkirts-shakesearch.onrender.com/. Try searching for "Hamlet" to display
 a set of results.
 
 In it's current state, however, the app is in rough shape. The search is
@@ -28,14 +28,3 @@ We will be primarily evaluating based on how well the search works for users. A 
 1. Fork this repository and send us a link to your fork after pushing your changes.
 2. Render (render.com) hosting, the application deploys cleanly from a public url.
 3. In your submission, share with us what changes you made and how you would prioritize changes if you had more time.
-
-## What I want to accomplish
-
-Slick frontend: Preact with simple Typescript build process
-
-Processing of completeworks.txt into usable data structure(s)
-
-Did they type a character name? What plays and how many lines?
-
-## Issues with and criticism of what exists
-

@@ -44,8 +44,10 @@ function Results({ results }) {
   return htm`<ul>
     ${results.map(r => {
       return htm`<li>
-        <div class="">${r.Lines.map(l => htm`${l.trim()}<br />`)}</div>
-        <footer><em>${r.Title}</em></footer>
+        <div class="">${r.Line}</div>
+        <footer>
+          — ${r.Character}<br />
+          <em>${r.Title}</em>, Act ${r.Act} Scene ${r.Scene}, ln. ${r.LineNum}</footer>
       </li>`
     })}
   </ul>`

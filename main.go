@@ -55,6 +55,8 @@ func main() {
 	}
 }
 
+// var puncRegex = regexp.MustCompile(`[.,";:!?()]`)
+
 func handleSearch(searcher Searcher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, ok := r.URL.Query()["q"]
@@ -67,7 +69,10 @@ func handleSearch(searcher Searcher) func(w http.ResponseWriter, r *http.Request
 
 		fmt.Printf("Got a query: %s\n", query[0])
 
-		qs := strings.ToLower(query[0])
+		qs := [][]rune{}
+		for _, s := range strings.Split(puncRegex.ReplaceAllString(strings.ToLower(query[0]), ""), " ") {
+			qs = append(qs, []rune(s))
+		}
 		results := searcher.Search(qs)
 		buf := &bytes.Buffer{}
 		enc := json.NewEncoder(buf)
