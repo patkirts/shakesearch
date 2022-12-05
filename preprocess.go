@@ -73,7 +73,7 @@ var charLineRegex = regexp.MustCompile("^[A-Z][A-Z][A-Z ]* ?[A-Z][A-Z]")
 var inlineStageRegex = regexp.MustCompile(`\[([A-Za-z ,\.;:{}])*\]`)
 var startStageRegex = regexp.MustCompile(`^\[([A-Za-z ,\.;:{}])*[^\]]$`)
 var endStageRegex = regexp.MustCompile(`^([A-Za-z ,\.;:{}])*\]$`)
-var puncRegex = regexp.MustCompile(`[.,";:!?()]`)
+var puncRegex = regexp.MustCompile(`[.,";:!?()-]`)
 
 type Line struct {
 	Act int
@@ -115,6 +115,7 @@ func processFile(filename string, s *Searcher, wg *sync.WaitGroup) {
 	stageDirections := false
 	act := 0 // prologues implicitly tracked
 	scene := 0
+	sceneLine := 1
 	// stageInstructions := false
 	// lines := make([]Line, 1)
 	title := ""
@@ -165,6 +166,7 @@ func processFile(filename string, s *Searcher, wg *sync.WaitGroup) {
 				log.Fatal(err)
 			}
 			scene = int(n)
+			sceneLine = 1
 
 		} else if charLineRegex.MatchString(line) {
 			nameLen := charLineRegex.FindStringIndex(line)[1]
@@ -191,8 +193,9 @@ func processFile(filename string, s *Searcher, wg *sync.WaitGroup) {
 						words = append(words, strings.ToLower(puncRegex.ReplaceAllString(strings.TrimSpace(word), "")))
 					}
 				}
+				sceneLine++
 				// fmt.Printf("%d;%d;%s;%s\n", act, scene, character, strings.Join(words, ";"))
-				fmt.Fprintf(searchFile, "%d;%d;%s;%s\n", act, scene, character, strings.Join(words, ";"))
+				fmt.Fprintf(searchFile, "%d;%d;%d;%s;%s\n", act, scene, sceneLine, character, strings.Join(words, ";"))
 				fmt.Fprintln(mainFile, line)
 			}
 			tryline = ""

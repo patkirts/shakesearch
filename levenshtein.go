@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/texttheater/golang-levenshtein/levenshtein"
@@ -14,6 +13,7 @@ type LineResult struct {
 	Score int
 	Act string
 	Scene string
+	SceneLine string
 	Character string
 	Line string
 	Title string
@@ -23,7 +23,7 @@ type LineResult struct {
 func levenshteinSearch(query [][]rune, lines []string, filename string) []LineResult {
 
 	// levThreshold := int(math.Round(float64(len(query)) / 8.0))
-	levThreshold := (len(query)-1)*2 + len(query)
+	levThreshold := len(query)
 
 	result := []LineResult{}
 
@@ -34,11 +34,12 @@ func levenshteinSearch(query [][]rune, lines []string, filename string) []LineRe
 
 	for lineNum, line := range lines {
 		words := strings.Split(line, ";")
-		if lineNum > 0 && len(words) > 3 {
+		if lineNum > 0 && len(words) > 4 {
 
 			score := 0
 			start := 0
-			for _, word := range words[3:] {
+			for _, word := range words[4:] {
+				trackScore := score
 				for _, qs := range query[start:] {
 					ln := []rune(word)
 					target := qs
@@ -46,26 +47,27 @@ func levenshteinSearch(query [][]rune, lines []string, filename string) []LineRe
 
 					distance := levenshtein.DistanceForStrings(target, source, defLevOpts)
 					if (distance < 1) {
-						score = score+2
-						start++
-						if score > 1 {
+						score++
+						if (len(target) > 3) {
 							score++
 						}
-					} else if (distance < 2) {
+					} else if (distance < 2 && len(target) > 3) {
 						score++
-						start++
 					}
+				}
+				if score > (trackScore+1) {
+					start++
 				}
 			}
 
 			if (score > levThreshold) {
-				fmt.Println(score, line)
 				result = append(result, LineResult{
 					LineNum: lineNum,
 					Score: score,
 					Act: words[0],
 					Scene: words[1],
-					Character: words[2],
+					SceneLine: words[2],
+					Character: words[3],
 				})
 			}
 

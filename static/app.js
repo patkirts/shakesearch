@@ -46,8 +46,8 @@ function Results({ results }) {
       return htm`<li>
         <div class="">${r.Line}</div>
         <footer>
-          — ${r.Character}<br />
-          <em>${r.Title}</em>, Act ${r.Act} Scene ${r.Scene}, ln. ${r.LineNum}</footer>
+          —  ${r.Character}  —<br />
+          <em>${r.Title}</em>, Act ${r.Act} Scene ${r.Scene}, ln. ${r.SceneLine}</footer>
       </li>`
     })}
   </ul>`
